@@ -252,19 +252,19 @@ echo 17  > /sys/class/gpio/unexport         # release
 
 ### 3.4 Side-by-Side Comparison
 
-| | `/dev` | `/proc` | `/sys` |
-|---|---|---|---|
-| **Filesystem type** | devtmpfs | procfs | sysfs |
-| **Primary purpose** | Hardware I/O | Kernel/process info | Device topology |
-| **Setup complexity** | High (5+ calls) | Low (1 call) | Automatic (kernel) |
-| **Major:minor needed** | Yes | No | No |
-| **udev node created** | Yes `/dev/X` | No | No |
-| **Struct used** | `file_operations` | `proc_ops` | `kobj_attribute` |
-| **ioctl support** | Natural | Possible, unusual | Not typical |
-| **mmap / DMA** | Supported | Not supported | Not supported |
-| **LED control** | `echo 1 > /dev/led` | `echo 1 > /proc/led` | `echo 1 > /sys/class/gpio/gpio17/value` |
-| **See CPU info** | No | `cat /proc/cpuinfo` | `cat /sys/devices/system/cpu/...` |
-| **Driver required** | Yes | Optional | No (kernel manages) |
+|                         | `/dev`     | `/proc`   | `/sys`   |
+|-------------------------|------------|-----------|----------|
+| **Filesystem type**     | devtmpfs   | procfs    | sysfs    |
+| **Primary purpose**     | Hardware I/O | Kernel/process info | Device topology |
+| **Setup complexity**    | High (5+ calls) | Low (1 call) | Automatic (kernel) |
+| **Major:minor needed**  | Yes | No | No |
+| **udev node created**   | Yes `/dev/X` | No | No |
+| **Struct used**         | `file_operations` | `proc_ops` | `kobj_attribute` |
+| **ioctl support**       | Natural | Possible, unusual | Not typical |
+| **mmap / DMA**          | Supported | Not supported | Not supported |
+| **LED control**         | `echo 1 > /dev/led` | `echo 1 > /proc/led` | `echo 1 > /sys/class/gpio/gpio17/value` |
+| **See CPU info**        | No | `cat /proc/cpuinfo` | `cat /sys/devices/system/cpu/...` |
+| **Driver required**     | Yes        | Optional | No (kernel manages) |
 | **Semantically correct for hardware** | ✅ Yes | ❌ No (misuse) | ✅ For attributes |
 
 ---
@@ -350,6 +350,9 @@ module_init()
 ├─ alloc_chrdev_region(&dev_num, 0, 1, "mydev")
 │      Asks kernel for a free major number
 │      dev_num now holds major:minor
+|      0: base for minor version (starts by 0)
+|      1: max count for instances of this driver (max of minors)
+|      "mydev": device name /dev/mydev<num>
 │
 ├─ cdev_init(&my_cdev, &my_fops)
 │      Binds your file_operations table to the cdev object
