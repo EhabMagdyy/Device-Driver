@@ -69,6 +69,64 @@ This project demonstrates the **legacy Linux platform device model** without Dev
 
 ---
 
+## Loading order
+
+### 1. Device loaded first
+```
+insmod gpio_device.ko
+        |
+        v
+gpio_device_init()
+        |
+        v
+platform_device_register(&bcm_gpio_device)
+        |
+        +-- name: "bcm-gpio"
+        |
+        v
+Kernel: Is there a registered platform_driver
+        with .driver.name == "bcm-gpio"?
+        |
+        +-- YES (driver loaded first)
+        |       |
+        |       v
+        |   MATCH -> probe() called
+        |
+        +-- NO (driver not loaded yet)
+                |
+                v
+            Device stays on bus,
+            waiting for driver to appear
+```
+
+### 2. Driver loaded first
+```
+insmod gpio_driver.ko
+        |
+        v
+platform_driver_register()
+        |
+        v
+Driver registered, but no device yet
+        |
+        v
+probe() NOT called (no device to bind to)
+```
+Then later:
+```plain
+insmod gpio_device.ko
+        |
+        v
+platform_device_register()
+        |
+        v
+Kernel finds matching "bcm-gpio" driver
+        |
+        v
+MATCH -> probe() called
+```
+---
+
 ## How It Works
 
 ### 1. Platform Device (`gpio_device.c`)
